@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="description" content="Acuiferos">
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" type="text/css" href="styles/bootstrap4/bootstrap.min.css">
+		<link href="plugins/fontawesome-free-5.0.1/css/fontawesome-all.css" rel="stylesheet" type="text/css">
+		<link rel="stylesheet" type="text/css" href="styles/texcoco_responsive.css">
+		<link rel="stylesheet" type="text/css" href="styles/tex.css">
+		<title>
+			MAPA INTERACTIVO
+		</title>
+		<!-- Leaflet -->
+		<link rel="stylesheet" href="lib/leaflet/leaflet.css" />
+		<script src="lib/leaflet/leaflet.js"></script>
+		<script src="http://maps.google.com/maps/api/jsv=3&sensor=false"></script>
+		<script src="lib/leaflet/Google.js"></script>
+		<script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+		<script src="data/area_estudio.geojson"></script>
+		<script src="data/agua.geojson"></script>
+		<script src="data/litologia.geojson"></script>
+		<script src="data/usosuelo.geojson"></script>
+		<script src="data/pendiente.geojson"></script>
+		<script src="data/precipitacion.geojson"></script>
+		<script src="data/infiltracion.geojson"></script>
+		<script src="data/drenaje.geojson"></script>
+		<script src="data/resultado.geojson"></script>					
+		<style type="text/css">
+			#map { height : 700px; width : 100%}
+			.legend { background : #E5E5E5; line-height : 1.3em}
+			.legend i { width : 2em; float : left }
+			.legend1 { background : #C1E0EA; line-height : 1.9em}
+			.legend1 i { width : 4em; float : left }			
+			
+
+		</style>
+	</head>
+	
+		
+	<body>
+<div class="super_container">
+
+	<!-- Header -->
+
+	<header class="header d-flex flex-row">
+
+		<div class="logo_container_2">
+				<ul class="main_nav_list">
+					<li class="main_nav_item"><a href="index.html">Inicio</a></li>
+				</ul>
+				<img src="images/logo_agua.png" alt="">
+		</div>
+
+	</header>
+	<!-- Header -->
+	
+
+	</div>
+	
+		<!-- Home -->
+
+	<div class="home">
+		<div class="home_background_container prlx_parent">
+			<div class="home_background prlx" style="background-image:url(images/xochimilco.jpg)"></div>
+		</div>
+	</div>		
+		
+		
+		
+		
+		
+		
+		<h1>Mapa Interactivo</h1>
+		<div id="map"></div>
+		
+		<script>
+			function area_estudioStyle(feature){
+				return {
+					
+					weight : 2,
+					opacity : 1,
+					color : 'red',
+					dashArray : 3,
+					fillOpacity : 0.01
+				}
+			}
+			
+			function aguaStyle(feature){
+				return {
+					fillColor : '#3ABFF7',
+					weight : 1,
+					color : '#1A6AC1',
+					dashArray : 2,
+					fillOpacity : 1.8
+					
+				}
+			}
+			
+			
+			
+			
+			function getdrenajeColor(valor){
+				if(valor > 4){
+					return '#0030A8';
+				}else if(valor > 3){
+					return '#00A9E6';
+				}else if(valor > 2){
+					return '#38A8F7';
+				}else if(valor > 1){
+					return '#B5FF73';
+				}else{
+					return '#FFFFA8';
+				}
+			}
+			
+			function drenajeStyle(feature){
+				return {
+					fillColor : getdrenajeColor(feature.properties.valor),
+					weight : 0,
+					opacity : 1,
+					color : '#7F7F7F',
+					dashArray : 2.7,
+					fillOpacity : 1
+				}
+			}			
+			
+					
+			function getInfiltracionColor(valo){
+				if(valo > 3){
+					return '#5263E3';
+				}else if(valo > 2){
+					return '#67F0C0';
+				}else if(valo > 1){
+					return '#30A9F0';
+				}else{
+					return '#78DE6F';
+				}
+			}
+			
+			function infiltracionStyle(feature){
+				return {
+					fillColor : getInfiltracionColor(feature.properties.valo),
+					weight : 0,
+					opacity : 1,
+					color : '#7F7F7F',
+					dashArray : 2.7,
+					fillOpacity : 1
+				}
+			}
+			
+			function getprecipitacionColor(valor){
+				if(valor > 4){
+					return '#0070FF';
+				}else if(valor > 3){
+					return '#73B2FF';
+				}else if(valor > 2){
+					return '#FFFFBE';
+				}else if(valor > 1){
+					return '#FFA77F';
+				}else{
+					return '#FF7F7F';
+				}
+			}
+			
+			function precipitacionStyle(feature){
+				return {
+					fillColor : getprecipitacionColor(feature.properties.valor),
+					weight : 0,
+					opacity : 1,
+					color : '#7F7F7F',
+					dashArray : 2.7,
+					fillOpacity : 1
+				}
+			}
+		
+			function getpendienteColor(valor){
+				if(valor > 4){
+					return '#249C24';
+				}else if(valor > 3){
+					return '#6ED65C';
+				}else if(valor > 2){
+					return '#FFFF00';
+				}else if(valor > 1){
+					return '#F78F00';
+				}else{
+					return '#FF0000';
+				}
+			}
+			
+			function pendienteStyle(feature){
+				return {
+					fillColor : getpendienteColor(feature.properties.valor),
+					weight : 0,
+					opacity : 1,
+					color : '#7F7F7F',
+					dashArray : 2.7,
+					fillOpacity : 1
+				}
+			}				
+	
+			function getusosueloColor(valor){
+				if(valor > 3){
+					return '#D687B9';
+				}else if(valor > 2){
+					return '#DFBFFF';
+				}else if(valor > 1){
+					return '#FFE57D';
+				}else{
+					return '#FFFFBE';
+				}
+			}
+			
+			function usosueloStyle(feature){
+				return {
+					fillColor : getusosueloColor(feature.properties.valor),
+					weight : 0,
+					opacity : 1,
+					color : '#7F7F7F',
+					dashArray : 2.7,
+					fillOpacity : 1
+				}
+			}				
+				
+			function getlitologiaColor(valor){
+				if(valor > 4){
+					return '#87B500';
+				}else if(valor > 3){
+					return '#ADFF73';
+				}else if(valor > 2){
+					return '#CBBCF7';
+				}else if(valor > 1){
+					return '#5BDEC8';
+				}else{
+					return '#E64040';
+				}
+			}
+			
+			function litologiaStyle(feature){
+				return {
+					fillColor : getlitologiaColor(feature.properties.valor),
+					weight : 0,
+					opacity : 1,
+					color : '#7F7F7F',
+					dashArray : 2.7,
+					fillOpacity : 1
+				}
+			}
+			
+			
+			function getresultadoColor(gridcode){
+				if(gridcode > 4){
+					return '#006100';
+				}else if(gridcode > 3){
+					return '#A4C400';
+				}else if(gridcode > 2){
+					return '#F9FB9D';
+				}else if(gridcode > 1){
+					return '#FDC412';
+				}else{
+					return '#FF2600';
+				}
+			}
+			
+			function resultadoStyle(feature){
+				return {
+					fillColor : getresultadoColor(feature.properties.gridcode),
+					weight : 0,
+					opacity : 1,
+					color : '#7F7F7F',
+					dashArray : 2.7,
+					fillOpacity : 1
+				}
+			}								
+					
+			
+		var map = L.map('map').setView([19.53, -98.90], 9);;
+		
+	L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+		maxZoom: 18,
+		attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+			'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+			'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+		id: 'mapbox.light'
+	}).addTo(map);
+	
+
+		var drenajeLayer = L.geoJson(
+		drenaje,
+		{style : drenajeStyle}
+		).addTo(map);
+		map.fitBounds(drenajeLayer.getBounds());
+		
+		var infiltracionLayer = L.geoJson(
+		infiltracion,
+		{style : infiltracionStyle}
+		).addTo(map);
+		map.fitBounds(infiltracionLayer.getBounds());
+		
+		var precipitacionLayer = L.geoJson(
+		precipitacion,
+		{style : precipitacionStyle}
+		).addTo(map);
+		map.fitBounds(precipitacionLayer.getBounds());			
+		
+		var pendienteLayer = L.geoJson(
+		pendiente,
+		{style : pendienteStyle}
+		).addTo(map);
+		map.fitBounds(pendienteLayer.getBounds());		
+	
+		var usosueloLayer = L.geoJson(
+		usosuelo,
+		{style : usosueloStyle}
+		).addTo(map);
+		map.fitBounds(usosueloLayer.getBounds());			
+	
+		var litologiaLayer = L.geoJson(
+		litologia,
+		{style : litologiaStyle}
+		).addTo(map);
+		map.fitBounds(litologiaLayer.getBounds());
+		
+		var resultadoLayer = L.geoJson(
+		resultado,
+		{style : resultadoStyle}
+		).addTo(map);
+		map.fitBounds(resultadoLayer.getBounds());
+		
+		
+
+		var legenddrenaje = L.control({position : 'bottomleft'});
+		legenddrenaje.onAdd = function(map){
+			var div = L.DomUtil.create('div', 'legend');
+			var labels = [
+				"Muy Bajo",
+				"Bajo", 
+				"Medio", 
+				"Alto",
+				"Muy Alto",
+			];
+			var grades = [1, 2, 3, 4, 5];
+			div.innerHTML = '<div><b>- - Densidad de Drenaje - -             </b></div>';
+			for(var i = 0; i < grades.length; i++){
+				div.innerHTML += '<i style="background:' 
+				+ getdrenajeColor(grades[i]) + '">&nbsp;&nbsp;</i>&nbsp;&nbsp;'
+				+ labels[i] + '<br />';
+			}
+			return div;
+		}
+		legenddrenaje.addTo(map);	
+
+
+		
+		
+		var legendInfiltracion = L.control({position : 'bottomleft'});
+		legendInfiltracion.onAdd = function(map){
+			var div = L.DomUtil.create('div', 'legend');
+			var labels = [
+				"Bajo", 
+				"Medio", 
+				"Alto",
+				"Muy Alto",
+			];
+			var grades = [1, 2, 3, 4];
+			div.innerHTML = '<div><b>-Capacidad de Infiltración-</b></div>';
+			for(var i = 0; i < grades.length; i++){
+				div.innerHTML += '<i style="background:' 
+				+ getInfiltracionColor(grades[i]) + '">&nbsp;&nbsp;</i>&nbsp;&nbsp;'
+				+ labels[i] + '<br />';
+			}
+			return div;
+		}
+		legendInfiltracion.addTo(map);
+		
+
+		var legendprecipitacion = L.control({position : 'bottomleft'});
+		legendprecipitacion.onAdd = function(map){
+			var div = L.DomUtil.create('div', 'legend');
+			var labels = [
+				"Muy Bajo",
+				"Bajo", 
+				"Medio", 
+				"Alto",
+				"Muy Alto",
+			];
+			var grades = [1, 2, 3, 4, 5];
+			div.innerHTML = '<div><b>- - - - - Precipitación - - - - -</b></div>';
+			for(var i = 0; i < grades.length; i++){
+				div.innerHTML += '<i style="background:' 
+				+ getprecipitacionColor(grades[i]) + '">&nbsp;&nbsp;</i>&nbsp;&nbsp;'
+				+ labels[i] + '<br />';
+			}
+			return div;
+		}
+		legendprecipitacion.addTo(map);	
+
+
+		var legendpendiente = L.control({position : 'bottomleft'});
+		legendpendiente.onAdd = function(map){
+			var div = L.DomUtil.create('div', 'legend');
+			var labels = [
+				"Muy Bajo",
+				"Bajo", 
+				"Medio", 
+				"Alto",
+				"Muy Alto",
+			];
+			var grades = [1, 2, 3, 4, 5];
+			div.innerHTML = '<div><b>- - - - - - Pendiente - - - - - - - </b></div>';
+			for(var i = 0; i < grades.length; i++){
+				div.innerHTML += '<i style="background:' 
+				+ getpendienteColor(grades[i]) + '">&nbsp;&nbsp;</i>&nbsp;&nbsp;'
+				+ labels[i] + '<br />';
+			}
+			return div;
+		}
+		legendpendiente.addTo(map);		
+
+		var legendusosuelo = L.control({position : 'bottomleft'});
+		legendusosuelo.onAdd = function(map){
+			var div = L.DomUtil.create('div', 'legend');
+			var labels = [
+				"Muy Bajo",
+				"Bajo", 
+				"Medio", 
+				"Alto",
+			];
+			var grades = [1, 2, 3, 4];
+			div.innerHTML = '<div><b>- - - - -Uso de Suelo - - - - - -</b></div>';
+			for(var i = 0; i < grades.length; i++){
+				div.innerHTML += '<i style="background:' 
+				+ getusosueloColor(grades[i]) + '">&nbsp;&nbsp;</i>&nbsp;&nbsp;'
+				+ labels[i] + '<br />';
+			}
+			return div;
+		}
+		legendusosuelo.addTo(map);			
+		
+		
+		var legendlitologia = L.control({position : 'bottomleft'});
+		legendlitologia.onAdd = function(map){
+			var div = L.DomUtil.create('div', 'legend');
+			var labels = [
+				"Muy Bajo",
+				"Bajo", 
+				"Medio", 
+				"Alto",
+				"Muy Alto",
+			];
+			var grades = [1, 2, 3, 4, 5];
+			div.innerHTML = '<div><b>- - - - - - - Litología - - - - - - -</b></div>';
+			for(var i = 0; i < grades.length; i++){
+				div.innerHTML += '<i style="background:' 
+				+ getlitologiaColor(grades[i]) + '">&nbsp;&nbsp;</i>&nbsp;&nbsp;'
+				+ labels[i] + '<br />';
+			}
+			return div;
+		}
+		legendlitologia.addTo(map);	
+		
+		var legendresultado = L.control({position : 'bottomright'});
+		legendresultado.onAdd = function(map){
+			var div = L.DomUtil.create('div', 'legend1');
+			var labels = [
+				"Muy Bajo",
+				"Bajo", 
+				"Medio", 
+				"Alto",
+				"Muy Alto",
+			];
+			var grades = [1, 2, 3, 4, 5];
+			div.innerHTML = '<div><b>ZP de Recarga de Agua Subterránea</b></div>';
+			for(var i = 0; i < grades.length; i++){
+				div.innerHTML += '<i style="background:' 
+				+ getresultadoColor(grades[i]) + '">&nbsp;&nbsp;</i>&nbsp;&nbsp;'
+				+ labels[i] + '<br />';
+			}
+			return div;
+		}
+		legendresultado.addTo(map);	
+
+
+		
+		
+		var aguaLayer = L.geoJson(
+		agua,
+		{style: aguaStyle}
+		).addTo(map);
+		map.fitBounds(aguaLayer.getBounds());
+		
+		var area_estudioLayer = L.geoJson(
+		area_estudio,
+		{style: area_estudioStyle}
+		).addTo(map);
+		map.fitBounds(area_estudioLayer.getBounds());			
+		
+		
+		var baseMaps = {
+				
+		};
+		
+		var overlayMaps = {
+				
+				'ZP Recarga de Agua Subterránea' : resultadoLayer,
+				'Area de Estudio' : area_estudioLayer,
+				'Cuerpos de Agua' :  aguaLayer,
+				'Litología' :  litologiaLayer,
+				'Uso de Suelo' :  usosueloLayer,
+				'Pendiente' :  pendienteLayer,
+				'Precipitación' :  precipitacionLayer,
+				'Capacidad de Infiltración' :  infiltracionLayer,
+				'Densidad de Drenaje' :  drenajeLayer,
+				
+		};
+
+		L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+		</script>		
+		
+	</body>
+</html>

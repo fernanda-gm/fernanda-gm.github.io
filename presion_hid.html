@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>Presión Hídrica - Leaflet</title>
+
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="description" content="Acuiferos">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+	<link rel="stylesheet" type="text/css" href="styles/bootstrap4/bootstrap.min.css">
+	<link href="plugins/fontawesome-free-5.0.1/css/fontawesome-all.css" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" type="text/css" href="styles/texcoco_styles.css">
+	<link rel="stylesheet" type="text/css" href="styles/texcoco_responsive.css">
+	
+<style>
+
+#map { 
+	width: 100%; 
+	height: 800px; 
+	}
+
+.info { 
+	padding: 6px 8px; 
+	font: 14px/16px Arial, Helvetica, sans-serif; 
+	background: white; 
+	background: rgba(255,255,255,0.8); 
+	box-shadow: 0 0 15px rgba(0,0,0,0.2); 
+	border-radius: 5px; 
+}
+
+.info h4 { 
+	margin: 0 0 5px;
+	color: #777; 
+}
+
+.legend { 
+	text-align: left; 
+	line-height: 18px; 
+	color: #555; 
+}
+
+.legend i { 
+	width: 50px; 
+	height: 18px; 
+	float: left; 
+	margin-right: 8px; 
+	opacity: 0.7; 
+}
+
+</style>
+		
+</head>
+
+
+<body>
+	
+
+<div class="super_container">
+
+	<!-- Header -->
+
+	<header class="header d-flex flex-row">
+
+		<div class="logo_container_2">
+				<ul class="main_nav_list">
+					<li class="main_nav_item"><a href="index.html">Inicio</a></li>
+				</ul>
+				<img src="images/logo_agua.png" alt="">
+		</div>
+
+	</header>
+	<!-- Header -->
+	
+
+	</div>
+
+	
+	<!-- Home -->
+
+	<div class="home">
+		<div class="home_background_container prlx_parent">
+			<div class="home_background prlx" style="background-image:url(images/quebradora_1.jpg)"></div>
+		</div>
+	</div>
+	
+		<h1>Grado de Presión Hídrica</h1>
+		<div id="map"></div>
+	
+
+<script type="text/javascript" src="js/presionshp.js"></script>
+
+<script type="text/javascript">
+
+	var map = L.map('map').setView([23.776163, -102.571998], 5.3);
+
+	L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+		maxZoom: 18,
+		attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+			'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+			'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+		id: 'mapbox.light'
+	}).addTo(map);
+
+
+	// control that shows state info on hover
+	var info = L.control();
+
+	info.onAdd = function (map) {
+		this._div = L.DomUtil.create('div', 'info');
+		this.update();
+		return this._div;
+	};
+
+	info.update = function (props) {
+
+// Avtivar barra Activa(props.ABREVIA);
+// No funciona el tip.show
+//	tip.show
+	
+		this._div.innerHTML = '<h4>Grado de presión hídrica (%) </h4>' +  (props ?
+			'<b>' + props.nom_rha + ' - (' + props.porc_gp + ')' 
+			+ '</b><br />' + '<h4> Volúmen total de agua concesionada </h4>' + props.vol_totc  + 'm<sup>3</sup>' 
+			+ '</b><br />' + '<h4> Volúmen total de agua renovable </h4>'+ props.ag_ren_m + 'm<sup>3</sup>'
+			: 'Pasar el ratón sobre la región hidrológica' );
+	};
+
+	info.addTo(map);
+
+
+	// get color depending on population density value
+	function getColor(d) {
+		  return d > 100 ? '#EF280F' :
+			  d >100  ? '#E36B2C' :
+			  d > 40  ? '#E36B2C' :
+			  d > 20  ? '#E7D40A' :
+			  d > 10  ? '#02AC66' :
+			  d > 1   ? '#23BAC4':
+			 
+			  
+			  '#ffffe5';							
+	}
+	
+	function style(feature) {
+		return {
+			weight: 1,
+			opacity: 1,
+			color: '#666',
+			dashArray: '3',
+			fillOpacity: 0.7,
+			fillColor: getColor(feature.properties.porc_gp)
+		};
+	}
+
+	function highlightFeature(e) {
+
+console.log(e);
+
+		var layer = e.target;
+		
+
+
+//Siglas del estado
+//console.log(e.target.feature.properties.nom_rha);
+
+
+		layer.setStyle({
+			weight: 1.7,
+			color: '#212121',
+			dashArray: '',
+			fillOpacity: 0.7
+		});
+		if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+			layer.bringToFront();
+		}
+
+		info.update(layer.feature.properties);
+	}
+
+// se cambio de posición
+//	var geojson;
+	
+	
+	function resetHighlight(e) {
+
+//Siglas del estado
+console.log(e.target.feature.properties.nom_rha);
+
+		geojson.resetStyle(e.target);
+		info.update();
+	}
+
+	function zoomToFeature(e) {
+		map.fitBounds(e.target.getBounds());
+	}
+
+	function onEachFeature(feature, layer) {
+		layer.on({
+			mouseover: highlightFeature,
+			mouseout: resetHighlight,
+			click: zoomToFeature
+		});
+	}
+
+	geojson = L.geoJson(presionshp, {
+		style: style,
+		onEachFeature: onEachFeature
+	}).addTo(map);
+
+	map.attributionControl.addAttribution('Population data &copy; <a href="http://census.gov/">US Census Bureau</a>');
+
+
+	var legend = L.control({position: 'topright'});
+
+	legend.onAdd = function (map) {
+
+		var div = L.DomUtil.create('div', 'info legend'),
+			grades = [ 1,10, 20, 40,100,],
+			labels = [     ],
+			labels = [     ],
+			from, to;
+
+		for (var i = 0; i < grades.length; i++) {
+			from = grades[i];
+			to = grades[i + 1];
+
+			labels.push(
+				'<i style="background:' + getColor(from + 1) + '"></i> ' +
+				from + (to ? '&ndash;' + to : '+'));
+		}
+
+	 div.innerHTML = labels.join('<br>' );
+		return div;
+	};
+
+	legend.addTo(map);
+
+</script>
+
+
+
+</body>
+</html>
